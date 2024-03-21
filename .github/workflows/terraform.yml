@@ -140,7 +140,10 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Run TFLint
-      run: tflint -f compact || echo "::set-output name=error::true"
+      run: |
+         tflint_output=$(tflint -f compact) || echo '::set-output name=error::true'
+         echo "TFLint output:"
+         echo "$tflint_output"
       id: tflint 
       continue-on-error: true
 
@@ -158,7 +161,7 @@ jobs:
     name: Terraform Apply
     needs: tflint
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout repository
