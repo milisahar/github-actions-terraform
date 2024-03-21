@@ -133,11 +133,21 @@ jobs:
         run: tflint || echo "::set-output name=error::true"
         continue-on-error: true
 
+      - name: Check for TFLint errors
+        if: steps.tflint.outputs.error == 'true'
+        run: |
+          echo "TFLint encountered an error. Closing the Pull Request."
+          curl -X POST \
+               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Content-Type: application/json" \
+               -d '{"state": "closed"}' \
+               "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments"
+
   terraform_apply:
     name: Terraform Apply
     needs: tflint
     runs-on: ubuntu-latest
-    if: ${{ needs.tflint.outputs.error != 'true' }} # Run only if TFLint didn't encounter any error
+    if: github.event_name == 'pull_request' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
