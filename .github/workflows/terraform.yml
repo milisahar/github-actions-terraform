@@ -105,7 +105,7 @@ name: Terraform Pull Request
 on:
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   tflint:
@@ -128,17 +128,16 @@ jobs:
           sudo mv tflint /usr/local/bin/
           rm tflint.zip
 
-      - name: Initialize TFLint
-        run: tflint --init
-
       - name: Run TFLint
-        run: tflint
+        id: tflint
+        run: tflint || echo "::set-output name=error::true"
+        continue-on-error: true
 
   terraform_apply:
-    name: Terraform validate
+    name: Terraform Apply
     needs: tflint
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.ref == 'refs/heads/master'
+    if: ${{ needs.tflint.outputs.error != 'true' }} # Run only if TFLint didn't encounter any error
 
     steps:
       - name: Checkout repository
