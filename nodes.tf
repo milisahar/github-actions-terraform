@@ -47,7 +47,7 @@ resource "aws_eks_node_group" "preProd-private-nodes" {
   ]
 
   capacity_type  = "ON_DEMAND"
-  instance_types = ["m7a.large"]
+  instance_types = ["m7a.333large"]
 
   scaling_config {
     desired_size = 1
