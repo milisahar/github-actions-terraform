@@ -109,33 +109,44 @@ on:
 
 jobs:
   tflint:
-    name: TFLint
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      name: Checkout source code
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.2.5
+    - uses: actions/cache@v4
+      name: Cache plugin dir
+      with:
+        path: ~/.tflint.d/plugins
+        key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
 
-      - name: Install TFLint
-        run: |
-          wget https://github.com/terraform-linters/tflint/releases/download/v0.30.0/tflint_linux_amd64.zip
-          unzip tflint_linux_amd64.zip
-          sudo mv tflint /usr/local/bin/
-          rm tflint_linux_amd64.zip
+    - uses: terraform-linters/setup-tflint@v4
+      name: Setup TFLint
+      with:
+        tflint_version: v0.50.3
 
-      - name: Run TFLint
-        id: tflint
-        run: tflint || echo "::set-output name=error::true"
-        continue-on-error: true
+    - name: Show version
+      run: tflint --version
 
-      - name: Check for TFLint errors
-        if: steps.tflint.outputs.error == 'true'
-        run: |
+    - name: Init TFLint
+      run: tflint --init
+      env:
+        # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Run TFLint
+      run: tflint -f compact || echo "::set-output name=error::true"
+      id: tflint 
+      continue-on-error: true
+
+    - name: Check for TFLint errors
+      if: steps.tflint.outputs.error == 'true'
+      run: |
           echo "TFLint encountered an error. Closing the Pull Request."
           curl -X POST \
                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
