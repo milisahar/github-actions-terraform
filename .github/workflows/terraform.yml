@@ -141,7 +141,7 @@ jobs:
 
     - name: Run TFLint
       run: |
-         tflint_output=$(tflint -f compact) || echo '::set-output name=error::true'
+         tflint_output=$(tflint) || echo '::set-output name=error::true'
          echo "TFLint output:"
          echo "$tflint_output"
       id: tflint 
