@@ -140,7 +140,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Run TFLint
-      run: tflint || echo '::set-output name=error::true'
+      run: tflint . || echo '::set-output name=error::true'
       id: tflint 
       continue-on-error: true
 
