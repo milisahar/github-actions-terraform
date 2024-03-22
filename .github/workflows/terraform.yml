@@ -144,7 +144,7 @@ jobs:
         tflint_wrapper: true
 
     - id: tflint
-      run: tflint -h
+      run: tflint --recursive 
 
     - run: echo ${{ steps.tflint.outputs.stdout }}
     - run: echo ${{ steps.tflint.outputs.stderr }}
